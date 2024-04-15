@@ -1,6 +1,6 @@
 # Design Overview: Generating Unique IDs with Concurrent Processes
 
-genid Function Design
+# genid Function Design
 The genid function generates unique, sequential, zero-padded serial numbers in a single-host, multi-process-safe manner. The function uses a file-based lock to ensure exclusive access to the ID generation process.
 
 # Test Method: testid.sh
