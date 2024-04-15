@@ -1,43 +1,39 @@
 #!/bin/bash
 
-# Include the 'genid' function from the 'genid.sh' file
+# Source the genid.sh script to make the genid function available
 source genid.sh
 
-# Remove the existing 'genid_counter' file to start fresh
+# Remove any existing genid_counter file
 rm -f /tmp/genid_counter
 
-# Set the number of parallel processes to run
+# Set the number of concurrent processes and IDs per process
 num_processes=50
-
-# Set the number of IDs to generate per process
 ids_per_process=100
 
-# Run the ID generation in parallel for each process
+# Run the genid function concurrently from multiple processes
+# and collect the generated IDs in the generated_ids.txt file
 for ((i=1; i<=num_processes; i++)); do
     (
-        # Generate the IDs for the current process
         for ((j=1; j<=ids_per_process; j++)); do
-            genid
+            genid >> generated_ids.txt
         done
     ) &
 done
 
-# Wait for all the parallel processes to finish
-wait $!
+# Wait for all the concurrent processes to finish
+wait
 
-# Collect all the generated IDs into a file
-sort -n > generated_ids.txt
+# Check the generated_ids.txt file for duplicates and missing IDs
+sorted_ids=$(sort -n generated_ids.txt)
+duplicate_count=$(echo "$sorted_ids" | uniq -d | wc -l)
+total_count=$(echo "$sorted_ids" | wc -l)
+expected_count=$((num_processes * ids_per_process))
 
-# Check for duplicate IDs
-if [ $(uniq -d generated_ids.txt | wc -l) -eq 0 ]; then
+# If there are no duplicates and no missing IDs, print success messages
+if [ $duplicate_count -eq 0 ] && [ $total_count -eq $expected_count ]; then
     echo "No duplicate IDs found."
-else
-    echo "Duplicate IDs found!"
-fi
-
-# Check if all the expected IDs were generated
-if [ $(wc -l < generated_ids.txt) -eq $((num_processes * ids_per_process)) ]; then
     echo "No missing IDs found."
 else
+    echo "Duplicate IDs found!"
     echo "Missing IDs found!"
 fi
